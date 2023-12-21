@@ -95,16 +95,15 @@ class MatrixInfo:
         self.sketchLimit = 10000
         self.sketchCache = {}
         
-        self.edgeLimit = 20000
+        self.edgeLimit = 0
         self.update = False
         self.keepKmers = False
         self.chunkSize = 30000
         
         self.patches = None
         self.kmers = None
-        self.trimFractions = None
         self.trimDegrees = None
-        self.trimMinWidths = None     
+        self.trimIslands = None
         
         self.attributes =  list(vars(self).keys())
         

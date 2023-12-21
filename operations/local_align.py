@@ -26,27 +26,26 @@ def selectClustersForAlignment(context, refs):
     for ref in refs:
         rc = clusterutils.readClustersFromDb(clusterutils.getClusterDbPath(context.matchInfo.dir, ref))
         for c in rc:
-            if any(context.seqGroup(i[2]) not in refGroups for i in rc[c]):
-                b = max(getIntervalLength(i) for i in rc[c] if i[2] in rset) // 100
-                buckets[b] = buckets.get(b, {})
-                buckets[b][c] = rc[c]
+            if any(context.seqGroup(i[2]) not in refGroups for i in c):
+                b = max(getIntervalLength(i) for i in c if i[2] in rset) // 100
+                buckets[b] = buckets.get(b, [])
+                buckets[b].append(c)
         configs().log("Found {} clusters for {}..".format(len(rc), ref))
 
     bs = sorted(buckets, reverse = True)
     lensum = sum(len(context.sequenceInfo.seqMap[ref]) for ref in refs)
     total, limit = 0, context.localAlignInfo.depth * lensum
     
-    result = {}   
+    result = {}  
     done = False
     configs().log("Drawing clusters for depth {}, limit {}..".format(context.localAlignInfo.depth, limit))
     for b in bs:
         if done:
             break
-        bclusters = buckets[b]
-        keys = sorted(bclusters, key = lambda x : (-max(getIntervalLength(i) for i in bclusters[x] if i[2] in rset), x))
-        for c in keys:    
-            result[c] = bclusters[c]
-            total = total + sum(getIntervalLength(i) for i in bclusters[c] if i[2] in rset)
+        bclusters = sorted(buckets[b], key = lambda x : (-max(getIntervalLength(i) for i in x if i[2] in rset), clusterutils.clusterKey(x)))
+        for c in bclusters:    
+            result[clusterutils.clusterKey(c)] = c
+            total = total + sum(getIntervalLength(i) for i in c if i[2] in rset)
             if total >= limit or len(result) >= context.localAlignInfo.limit:
                 done = True
                 break

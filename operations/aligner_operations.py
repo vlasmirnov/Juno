@@ -5,7 +5,7 @@ Created on May 2, 2022
 '''
 
 import time
-from operations import matrix_launcher, matching, clustering, local_align, maf, cluster_builder
+from operations import matrix_launcher, maf
 import os
 from data.config import configs
 from data.context import Context
@@ -19,14 +19,15 @@ def cliOperation():
     runOperation(context, configs().operation)
 
 def runOperation(context, operation):
+    operation = operation or "maf"
     context.status("{} operation started..".format(operation))
     t1 = time.time() 
     
-    if operation.lower() == "matrix":
-        matrix_launcher.buildMatrix(context)
-        
-    elif operation.lower() == "maf":
+    if operation.lower() == "maf":
         maf.buildMafFile(context)
+    
+    elif operation.lower() == "matrix":
+        matrix_launcher.buildMatrix(context)
     
     elif operation.lower() == "maf_busco":
         psplit = os.path.splitext(configs().metricsPath)
@@ -36,21 +37,9 @@ def runOperation(context, operation):
         #print([namenums.get(s.lower(), None) for score, overlaps, total, s in scores])
     
     elif operation.lower() == "maf_coverage":
-        refName = context.sequenceInfo.seqMap[context.sequenceInfo.refSequences[0]].name
         psplit = os.path.splitext(configs().metricsPath)
         outPath = "{}_{}{}".format(psplit[0], "coverage", psplit[1])
-        maf_metrics.buildMafCoverage(context.mafInfo.path, outPath, refName, groupByBaseName = True)
-    
-    elif operation.lower() == "matrix_busco":
-        metricsutils.buildMatrixBuscoScores(context)
-    
-    elif operation.lower() == "matching_busco":
-        context.matchInfo.dir = context.matchInfo.dir or os.path.join(context.matrixInfo.dir, "matches_{}".format(context.matchInfo.rule))
-        metricsutils.buildMatchingBuscoScores(context, [context.matchInfo.dir])
-    
-    elif operation.lower() == "cluster_busco":
-        context.clusterInfo.dir = context.clusterInfo.dir or os.path.join(context.dir, "clustering_{}_{}".format(context.clusterInfo.strategy, context.clusterInfo.parameter))
-        metricsutils.buildClusteringDirBuscoScores(context, [context.clusterInfo.dir])
+        maf_metrics.buildMafCoverage(context.mafInfo.path, outPath)
 
     t2 = time.time()
     context.status("{} operation finished, took {} min..".format(operation, (t2-t1)/60.0))

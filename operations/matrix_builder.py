@@ -42,7 +42,7 @@ def buildMatrixFromKmers(matrixInfo, level, seq1, seq2, strand, kmers1, kmers2, 
     mat1, mat2 = buildKmerMatrices(matrixInfo, level, seq1, seq2, kmers1, kmers2)  
     configs().debug("Built kmer matrices of size {} and {}..".format(mat1.shape, mat2.shape))
     length1, length2 = math.ceil(len(seq1) / p), math.ceil(len(seq2) / p)  
-    matrix = buildSparseMatrix(matrixInfo, mat1, mat2, pmatrix, p, pp, length1, length2).tocoo()
+    matrix = buildSparseMatrix(matrixInfo, level, mat1, mat2, pmatrix, p, pp, length1, length2).tocoo()
     matrix = trimMatrix(matrixInfo, level, matrix, strand)
     
     #drawer = visutils.Viewer()
@@ -53,7 +53,7 @@ def buildMatrixFromKmers(matrixInfo, level, seq1, seq2, strand, kmers1, kmers2, 
     configs().debug("Average node degree {}".format( 2*matrix.nnz/(matrix.shape[0]+matrix.shape[1]) )) 
     return matrix
 
-def buildSparseMatrix(matrixInfo, mat1, mat2, pmatrix, p, pp, length1, length2):
+def buildSparseMatrix(matrixInfo, level, mat1, mat2, pmatrix, p, pp, length1, length2):
     if pmatrix is not None:
         pmatrix = pmatrix.tocoo()
         submatrices = []
@@ -73,19 +73,19 @@ def buildSparseMatrix(matrixInfo, mat1, mat2, pmatrix, p, pp, length1, length2):
             I, J, V = I[V > 0], J[V > 0], V[V > 0]
         matrix = coo_matrix((V,(I,J)),shape=(length1, length2), dtype = np.float32)
     else:
-        matrix = matrixMultiply(matrixInfo, mat1, mat2)
+        matrix = matrixMultiply(matrixInfo, level, mat1, mat2)
     configs().debug("Built sparse similarity matrix of size {}, {} nnz..".format(matrix.shape, matrix.nnz))
     return matrix
 
-def matrixMultiply(matrixInfo, mat1, mat2):
-    if mat1.shape[0] * mat2.shape[1] <= matrixInfo.chunkSize ** 2:
+def matrixMultiply(matrixInfo, level, mat1, mat2):
+    if matrixInfo.chunkSize is None or mat1.shape[0] * mat2.shape[1] <= matrixInfo.chunkSize ** 2:
         return mat1.dot(mat2)
     
     submatrices = []
     for i in range(0, mat1.shape[0], matrixInfo.chunkSize):
         for j in range(0, mat2.shape[1], matrixInfo.chunkSize):
             res = mat1[i : i + matrixInfo.chunkSize].dot(mat2[:, j : j + matrixInfo.chunkSize])
-            res = trimMatrixDegreeSparse(res, 2)
+            res = trimMatrixDegree(res, matrixInfo.trimDegrees[level])
             res.row = res.row + i
             res.col = res.col + j
             submatrices.append(res)
@@ -152,14 +152,12 @@ def buildSparseKmerMatrix(indexes, starts, sharedIndexes, length, patchSize):
     return matrix
 
 def trimMatrix(matrixInfo, level, matrix, strand):
-    #matrix = matrix.tocoo()
-    matrix = trimMatrixFractionSparse(matrix, matrixInfo.trimFractions[level])
-    matrix = trimMatrixDegreeSparse(matrix, matrixInfo.trimDegrees[level])
-    matrix = trimMatrixIslandsSparse(matrix, matrixInfo.trimMinWidths[level], strand)
-    #matrix = matrix.tocsr()
+    matrix = trimMatrixDegree(matrix, matrixInfo.trimDegrees[level])
+    if matrixInfo.trimIslands is None or matrixInfo.trimIslands[level]:
+        matrix = trimMatrixIslands(matrix, strand)
     return matrix
 
-def trimMatrixFractionSparse(matrix, fraction):
+def trimMatrixFraction(matrix, fraction):
     if fraction is None:
         return matrix
     
@@ -177,7 +175,7 @@ def trimMatrixFractionSparse(matrix, fraction):
     configs().debug("Average node degree {}".format(matsize/matrix.shape[0])) 
     return matrix
 
-def trimMatrixDegreeSparse(matrix, threshold):
+def trimMatrixDegree(matrix, threshold):
     if threshold is None:
         return matrix
     matrix = matrix.tolil()
@@ -207,9 +205,7 @@ def trimMatrixDegreeSparse(matrix, threshold):
     result = result1.maximum(result2).tocoo()
     return result
 
-def trimMatrixIslandsSparse(matrix, threshold, strand):
-    if threshold is None or threshold <= 1:
-        return matrix
+def trimMatrixIslands(matrix, strand):
     matrix = matrix.tocoo()
     smult = 1 if strand == 1 else -1
     row1, col1 = np.array(matrix.row)+1, np.array(matrix.col)

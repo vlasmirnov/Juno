@@ -20,10 +20,8 @@ def main(argParsers):
     
     try:
         if configs().mode == "gui":
-            configs().debug("Opening GUI..")
             from gui import display
             display.launchDisplay()
-            configs().debug("Closed GUI..")
         else:
             aligner_operations.cliOperation()
     except:
@@ -47,9 +45,10 @@ if __name__ == '__main__':
     appParser.add_argument("-c", "--config_file", type=none_or_path, help="Path to user config file", required=False)    
     appParser.add_argument("--operation", type=none_or_str, required=False)    
     appParser.add_argument("-t", "--threads", type=none_or_int, help="Number of threads to use", required=False)
+    appParser.add_argument("-u", "--update", type=none_or_str, required=False)
     appParser.add_argument("--log", dest = "loggingEnabled", type=none_or_str, required=False)    
     appParser.add_argument("--busco_dir", dest = "buscoDir", type=none_or_path, help="(debugging) Path to busco directory", required=False)
-    appParser.add_argument("-u", "--update", type=none_or_str, required=False)
+    
     
     #Sequence arguments
     sequenceParser = argparse.ArgumentParser()
@@ -57,7 +56,6 @@ if __name__ == '__main__':
 
     sequenceParser.add_argument("-s", "--sequence_paths", dest = "sequencePaths", type=none_or_str, nargs="+",
                         help="Paths to input sequences files", required=False, action = config.PathListAction)
-    #sequenceParser.add_argument("--ref_sequences", dest = "refSequences", type=none_or_str, nargs="+", required=False)
     sequenceParser.add_argument("-r", "--ref", dest = "ref", type=none_or_str, nargs="+", required=False)
     sequenceParser.add_argument("-q", "--query", dest = "query", type=none_or_str, nargs="+", required=False)
     
@@ -66,17 +64,13 @@ if __name__ == '__main__':
     argParsers["MATRIX"] = matrixParser
 
     matrixParser.add_argument("--matrix_sketch_limit", dest = "sketchLimit", type=none_or_int, required=False)
-    matrixParser.add_argument("--matrix_update", dest = "update", action='store_true')
     matrixParser.add_argument("--matrix_keep_kmers", dest = "keepKmers", action='store_true')
     matrixParser.add_argument("--matrix_chunk_size", dest = "chunkSize", type=none_or_int, required=False)
-    matrixParser.add_argument("--matrix_edge_limit", dest = "edgeLimit", type=none_or_int, required=False)
     
     matrixParser.add_argument("--matrix_patches", dest = "patches", type=none_or_int, nargs="+", required=False)
     matrixParser.add_argument("--matrix_kmers", dest = "kmers", type=none_or_int, nargs="+", required=False)
-    matrixParser.add_argument("--matrix_trim_fractions", dest = "trimFractions", type=none_or_float, nargs="+", required=False)
     matrixParser.add_argument("--matrix_trim_degrees", dest = "trimDegrees", type=none_or_int, nargs="+", required=False)
-    matrixParser.add_argument("--matrix_trim_min_widths", dest = "trimMinWidths", type=none_or_int, nargs="+", required=False)
-    
+    matrixParser.add_argument("--matrix_trim_islands", dest = "trimIslands", type=none_or_int, nargs="+", required=False)
 
     #Match arguments
     matchParser = argparse.ArgumentParser()
@@ -92,14 +86,12 @@ if __name__ == '__main__':
     clusterParser.add_argument("--cluster_parameter", dest = "parameter", type=none_or_int, required=False)
     clusterParser.add_argument("--cluster_policy", dest = "policy", type=none_or_str, required=False)
     clusterParser.add_argument("--cluster_limit", dest = "climit", type=none_or_int, required=False)
-    clusterParser.add_argument("--cluster_update", dest = "update", action='store_true')
     
     #Cluster arguments
     alignParser = argparse.ArgumentParser()
     argParsers["ALIGN"] = alignParser
     alignParser.add_argument("--align_limit", dest = "limit", type=none_or_int, required=False)
     alignParser.add_argument("--align_factor", dest = "factor", type=none_or_float, required=False)
-    alignParser.add_argument("--align_depth", dest = "depth", type=none_or_float, required=False)
     
     #MAF arguments
     mafParser = argparse.ArgumentParser()

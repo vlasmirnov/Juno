@@ -28,9 +28,10 @@ def readClustersFromDb(clusterDir):
     if os.path.exists(clusterDir):
         data = dbutils.readDataFromDb(clusterDir, None, None, mode = 'text')
         rows = data.splitlines()
-        clusters = [json.loads(row) for row in rows]
-        clusters = [[tuple(i) for i in cluster] for cluster in clusters]
-        clusters = {clusterKey(cluster) : cluster for cluster in clusters}
+        clusters = [[tuple(i) for i in json.loads(row)] for row in rows]
+        #clusters = [json.loads(row) for row in rows]
+        #clusters = [[tuple(i) for i in cluster] for cluster in clusters]
+        #clusters = {clusterKey(cluster) : cluster for cluster in clusters}
     return clusters
 
 def writeClustersToDb(clusterDir, clusters, key = None):

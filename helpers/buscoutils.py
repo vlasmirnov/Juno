@@ -263,53 +263,26 @@ def checkBuscoLetterBlocks(buscoDir, blocks):
     scores = [(rs, s, tp[s], fp[s], len(ltrBuscoMap[s])) for s in tp]
     return scores
 
-def checkBuscoLetterBlocks1(buscoDir, blocks):
-    buscoClusters = readBuscoFiles(buscoDir)
-    print("Found {} busco clusters..".format(len(buscoClusters)))
-    cmap = readCmap(buscoDir, buscoClusters)
-    rs = None
-    ltrBuscoMap = None
-    seqTotals = {}
-        
+def checkMafCoverage(blocks):
+    coverage = {}
+    curL = 0
     for block in blocks:
         rseq, rltrs, rlen, rc1, rc2, rstrand = block[0]
-        rseq = cmap[rseq]
-        
-        if ltrBuscoMap is None:
-            rs = rseq
-            buscoClusters = {b : cluster for b, cluster in buscoClusters.items() if any(i[2] == rs for i in cluster)}
-            print("Found {} busco clusters against ref sequence..".format(len(buscoClusters)))
-            ltrBuscoMap = {}
-            for b, cluster in buscoClusters.items():
-                for i in cluster:
-                    ltrBuscoMap[i[2]] = ltrBuscoMap.get(i[2], {})
-                    for l in range(i[0], i[1]+1): 
-                        ltrBuscoMap[i[2]][l] = (b, i[3])
-            seqTotals = {s : len(ltrBuscoMap[s]) for s in ltrBuscoMap if s != rs}
-        
         idxs = [n for n,c in enumerate(rltrs) if c not in ("-", "_")]
-        idxs = [(n, rc1+x if rstrand == 1 else rc2-x) for x,n in enumerate(idxs)]
-        idxs = {n : ridx for (n, ridx) in idxs if ridx in ltrBuscoMap.get(rseq, {})}
-        if len(idxs) == 0:
-            continue
-        #print(idxs)
+        blockCovers = {}
         for qseq, qltrs, qlen, qc1, qc2, qstrand in block[1:]:
-            if qseq not in cmap:
-                continue      
-            qseq = cmap[qseq]      
-            qidxs = [n for n,c in enumerate(qltrs) if c not in ("-", "_")]
-            qidxs = [(n, qc1+x if qstrand == 1 else qc2-x) for x,n in enumerate(qidxs)]
-            qidxs = {n : qidx for (n, qidx) in qidxs if qidx in ltrBuscoMap.get(qseq, {})}
-            for n in qidxs:
-                if n in idxs:
-                    rb, rstr = ltrBuscoMap[rseq][idxs[n]]
-                    qb, qstr = ltrBuscoMap[qseq][qidxs[n]]
-                    if rb == qb and (rstr == qstr) == (rstrand == qstrand):
-                        ltrBuscoMap[qseq].pop(qidxs[n])
+            skey = qseq.split('.')[0]
+            blockCovers[skey] = blockCovers.get(skey, set())
+            blockCovers[skey].update(n for n in idxs if qltrs[n] not in ("-", "_"))
+        for s, sltrs in blockCovers.items():
+            coverage[s] = coverage.get(s, 0) + len(sltrs)
+            
+        curL = curL + len(idxs)
+        if 100 * curL // rlen > 100 * (curL - len(idxs)) // rlen:
+            print("{}%..".format(100 * curL // rlen))
     
-    seqMatches = {s : seqTotals[s] - len(ltrBuscoMap[s]) for s in seqTotals}           
-    scores = [(rs, s, seqMatches[s], seqTotals[s]) for s in seqTotals]
-    return scores
+    coverages = [(rseq, s, c, rlen) for s, c in coverage.items()]    
+    return coverages
 
 def readBuscoFiles(bdir):
     buscoMap = {}

@@ -126,3 +126,166 @@ class Viewer:
                                        color = c,
                                        alpha = a,
                                        zorder = 20))
+
+
+def saveStackedBarGraph(outputFile, groups, bars, lines, title ="", xAxis = "", yAxis = ""):   
+    fig = plt.figure()
+    plt.rcParams.update({'font.size': 18})
+    #plt.rcParams.update({'font.size': 10})
+    ax = fig.add_subplot(1, 1, 1)
+    plotBarStackedGraph(ax,  groups, bars, title, xAxis, yAxis)
+    if lines is not None:
+        plotLineGraph(ax, lines, title, xAxis, yAxis)
+    #plt.show()
+    
+    figManager = plt.get_current_fig_manager()
+    figManager.window.state('zoomed')
+    fig.canvas.draw()
+    fig.savefig(outputFile, bbox_inches = 'tight', pad_inches = 0, dpi=300)
+    fig.savefig(outputFile.replace(".png", ".pdf"), bbox_inches = 'tight', pad_inches = 0)
+    fig.savefig(outputFile.replace(".png", ".eps"), bbox_inches = 'tight', pad_inches = 0)
+    
+def saveLineGraph(outputFile, lines, title ="", xAxis = "", yAxis = ""):   
+    fig = plt.figure()
+    plt.rcParams.update({'font.size': 18})
+    #plt.rcParams.update({'font.size': 10})
+    ax = fig.add_subplot(1, 1, 1)
+    plotLineGraph(ax, lines, title, xAxis, yAxis)
+    
+    #plt.legend(loc='lower center', bbox_to_anchor=(0.5, 0), ncol=3)
+    plt.legend(ncol=2, fontsize = 12)
+    plt.xlabel(xAxis)
+    plt.title(title)
+    
+    #plt.show()
+    figManager = plt.get_current_fig_manager()
+    figManager.window.state('zoomed')
+    fig.canvas.draw()
+    fig.savefig(outputFile, bbox_inches = 'tight', pad_inches = 0, dpi=300)
+    #fig.savefig(outputFile.replace(".png", ".pdf"), bbox_inches = 'tight', pad_inches = 0)
+    #fig.savefig(outputFile.replace(".png", ".eps"), bbox_inches = 'tight', pad_inches = 0)
+
+def saveDoubleLineGraph(outputFile, lines1, lines2, title ="", xAxis = "", yAxis1 = "", yAxis2 = ""):   
+    fig = plt.figure()
+    plt.rcParams.update({'font.size': 18})
+    #plt.rcParams.update({'font.size': 10})
+    ax1 = fig.add_subplot(1, 1, 1)
+    plotLineGraph(ax1, lines1, title, xAxis, yAxis1)
+    ax2 = ax1.twinx()
+    plotLineGraph(ax2, lines2, title, xAxis, yAxis2)
+    
+    
+    lns = ax1.lines + ax2.lines
+    labs = [l.get_label() for l in lns]
+    plt.legend(lns, labs, ncol=2, fontsize = 12, loc = "center right")
+    #plt.legend(loc='lower center', bbox_to_anchor=(0.5, 0), ncol=3) loc=0
+    #plt.legend(ncol=2, fontsize = 12)
+    
+    
+    ax1.set_xlabel(xAxis)
+    plt.title(title)
+    
+    #plt.show()
+    figManager = plt.get_current_fig_manager()
+    figManager.window.state('zoomed')
+    fig.canvas.draw()
+    fig.savefig(outputFile, bbox_inches = 'tight', pad_inches = 0, dpi=300)
+    fig.savefig(outputFile.replace(".png", ".pdf"), bbox_inches = 'tight', pad_inches = 0)
+    fig.savefig(outputFile.replace(".png", ".eps"), bbox_inches = 'tight', pad_inches = 0)
+    
+    
+
+def plotBarGraph3(ax, groups, bars, title = "", xAxis = "", yAxis = ""):
+    
+    ax.set_facecolor((0.9,0.9,0.9))
+    barWidth = 1 / (len(bars)+1)
+    opacity = 0.8
+    numBars = 0
+    defaultColorSet = getColorSet("blue", len(bars))
+        
+    for values,err,label,color in bars: 
+        if color == None:
+            color = defaultColorSet[numBars]
+        barsIndex = [i + numBars*barWidth for i in range(len(groups))]
+        rects = plt.bar(barsIndex, values, barWidth, label = label, alpha = opacity, color = color, yerr = err) #yerr = std)
+        numBars = numBars + 1     
+         
+
+    plt.xlabel(xAxis)
+    plt.ylabel(yAxis)
+    plt.title(title)
+    ticksIndex = [i + barWidth * (len(bars)-1)/2 for i in range(len(groups))]
+    plt.xticks(ticksIndex, groups, rotation=340)#, fontsize=10)
+    #plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1), ncol=3)
+    plt.legend()
+
+def plotBarStackedGraph(ax,  groups, bars, title = "", xAxis = "", yAxis = ""):
+    
+    ax.set_facecolor((0.9,0.9,0.9))
+    barWidth = 1 / (len(bars)+1)
+    opacity = 0.8
+    numBars = 0
+    defaultColorSet = getColorSet("blue", len(bars))
+    
+    for barStack in bars: 
+        barsIndex = [i + numBars*barWidth for i in range(len(groups))]
+        floors = [0.0 for b in barStack[0][0]]
+        for b in range(len(barStack)):
+            values,err,label,color = barStack[b]             
+            #print(values, err, label, color)
+            if color == None:
+                color = defaultColorSet[numBars]
+            plt.bar(barsIndex, values, barWidth, label = label, alpha = opacity, color = color, bottom = floors, yerr = err)
+            floors = [floors[k] + values[k] for k in range(len(values))]
+        numBars = numBars + 1     
+         
+
+    plt.xlabel(xAxis)
+    plt.ylabel(yAxis)
+    plt.title(title)
+    ticksIndex = [i + barWidth * (len(bars)-1)/2 for i in range(len(groups))]
+    #plt.xticks(ticksIndex, groups, rotation=340, fontsize=10)
+    plt.xticks(ticksIndex, groups, fontsize = 10)
+    #plt.xticks(ticksIndex, groups)
+    plt.legend(ncol=2, fontsize = 12)
+    #plt.legend()
+
+
+def plotLineGraph(ax, lines, title = "", xAxis = "", yAxis = ""):
+    
+    ax.set_facecolor((0.9,0.9,0.9))
+    opacity = 0.8
+    defaultColorSet = getColorSet("red", len(lines))
+    
+    for i in range(len(lines)):
+        x, y, label, color, linestyle, marker = lines[i]
+        if color == None:
+            color = defaultColorSet[i]
+        if linestyle == None:
+            linestyle = "-"
+        ax.plot(x, y, label = label, color = color, linestyle = linestyle, alpha = opacity, marker=marker)
+     
+    ax.set_ylabel(yAxis)
+    #ax.set_ylim(bottom=0)
+    #ax.set_yscale('log', basey = 10)
+    #ticksIndex = [i + barWidth * (len(bars)-1)/2 for i in range(len(groups))]
+    #plt.xticks(rotation=340, fontsize=10)
+    
+    #plt.legend(loc='lower center', bbox_to_anchor=(0.5, 0), ncol=3)
+    #plt.legend(ncol=2, fontsize = 12)
+    #plt.legend()
+
+
+def getColorSet(color, num):
+    n = max(1, num-1)
+    if color.lower() == "blue":
+        return [(0.25*i/n, 0.5*i/n, 0.65+0.35*i/n) for i in range(num)]
+    elif color.lower() == "red":
+        #return [(0.6+0.4*i/n, 0.5*i/n, 0.4*i/n) for i in range(num)]
+        return [(0.6+0.4*i/n, 0.5*i/n, 0.25*i/n) for i in range(num)]
+    #elif color.lower() == "yellow":
+        
+    elif color.lower() == "green":
+        return [(0.0, 0.5+0.5*i/n, 0.5*i/n) for i in range(num)]
+    elif color.lower() == "black":
+        return [(0.1+0.8*i/n, 0.1+0.8*i/n, 0.1+0.8*i/n) for i in range(num)]

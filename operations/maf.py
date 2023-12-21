@@ -274,7 +274,7 @@ def buildDists(context, clusters, ps, refGroups, k):
     for ri in ris:
         for qi in qis:            
             ltrCounts = getLtrCountsFromCache(context, clusters, alignCache, k, qi, ri[3])
-            #dist = getAlignIntervalDist(context, clusters, alignCache, k, ri, qi, ri)
+            dist = getAlignIntervalDist(context, clusters, alignCache, k, ri, qi, ri)
             for si in subintervals(ri, ps):
                 matchCols = getMatchColsFromCache(context, clusters, alignCache, k, ri, si)
                 c1 = int(ltrCounts[matchCols[0]])
@@ -282,7 +282,7 @@ def buildDists(context, clusters, ps, refGroups, k):
                 seqkey = checkInvertInterval(context.sequenceInfo, qi, ri[3])
                 proj = (seqkey[0]+c1, seqkey[0]+c2-1, seqkey[2], seqkey[3])
                 proj = checkInvertInterval(context.sequenceInfo, proj, 1) 
-                dist = getAlignIntervalDist(context, clusters, alignCache, k, ri, qi, si)
+                #dist = getAlignIntervalDist(context, clusters, alignCache, k, ri, qi, si)
                 
                 if dist <= context.mafInfo.maxDistance:
                     results[si] = results.get(si, {})

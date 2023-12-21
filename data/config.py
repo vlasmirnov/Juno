@@ -38,8 +38,8 @@ class Configs:
 
     def __init__(self):
         self.mode = "cli"
-        self.configFile= None
         self.operation = None
+        self.configFile= None
         
         self.threads = 1
         self.loggingEnabled = True
