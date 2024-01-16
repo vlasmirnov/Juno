@@ -217,7 +217,7 @@ def checkBuscoLetterBlocks(buscoDir, blocks):
     cmap = readCmap(buscoDir, buscoClusters)
     rs = None
     ltrBuscoMap = None
-    tp, fp = {}, {}
+    tp, fp, np = {}, {}, {}
         
     for block in blocks:
         rseq, rltrs, rlen, rc1, rc2, rstrand = block[0]
@@ -235,6 +235,7 @@ def checkBuscoLetterBlocks(buscoDir, blocks):
                         ltrBuscoMap[i[2]][l] = (b, i[3])
             tp = {s : set() for s in ltrBuscoMap if s != rs}
             fp = {s : 0 for s in ltrBuscoMap if s != rs}
+            np = {s : 0 for s in ltrBuscoMap if s != rs}
         
         idxs = [n for n,c in enumerate(rltrs) if c not in ("-", "_")]
         idxs = {n : rc1+x if rstrand == 1 else rc2-x for x,n in enumerate(idxs)}
@@ -251,6 +252,7 @@ def checkBuscoLetterBlocks(buscoDir, blocks):
             bqidxs = set(n for n in qidxs if qidxs[n] in ltrBuscoMap.get(qseq, {}))
             for n in bqidxs:
                 if n in idxs:
+                    np[qseq] = np[qseq] + 1
                     fp[qseq] = fp[qseq] + 1
                     if n in bidxs and qidxs[n] not in tp[qseq]:
                         rb, rstr = ltrBuscoMap[rseq][idxs[n]]
@@ -260,7 +262,7 @@ def checkBuscoLetterBlocks(buscoDir, blocks):
                             fp[qseq] = fp[qseq] - 1
     
     tp = {s : len(tp[s]) for s in tp}   
-    scores = [(rs, s, tp[s], fp[s], len(ltrBuscoMap[s])) for s in tp]
+    scores = [(rs, s, tp[s], fp[s], len(ltrBuscoMap[s]), np[s]) for s in tp]
     return scores
 
 def checkMafCoverage(blocks):

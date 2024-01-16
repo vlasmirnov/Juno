@@ -38,9 +38,9 @@ def graphBuscoScores():
                 curset = {}
             else:
                 tokens = line.split('    ')
-                if len(tokens) == 4:
-                    species = '_'.join(tokens[2].split('_')[:2])
-                    curset[species] = float(tokens[0])
+                if len(tokens) == 6:
+                    species = '_'.join(tokens[4].split('_')[:2])
+                    curset[species] = (float(tokens[0]), float(tokens[1]))
     
     for name in bscores:
         print(name)
@@ -54,11 +54,27 @@ def graphBuscoScores():
     lines = []
     for name in bscores:
         x = [tdist[s] for s in staxons]
-        y = [bscores[name][s] for s in staxons]
+        y = [bscores[name][s][0] for s in staxons]
         label, color, linestyle, marker = name, None, "", "o"
         lines.append((x,y,label, color, linestyle, marker))
+    visutils.saveLineGraph(args.output.replace(".png", "_recall.png"), lines, "BUSCO Recall", "Distance from Inachis Io", "Recall")
     
-    visutils.saveLineGraph(args.output, lines, "BUSCO Recall", "Distance from Inachis Io", "Recall")
+    lines = []
+    for name in bscores:
+        x = [tdist[s] for s in staxons]
+        y = [1-bscores[name][s][1] for s in staxons]
+        label, color, linestyle, marker = name, None, "", "o"
+        lines.append((x,y,label, color, linestyle, marker))
+    visutils.saveLineGraph(args.output.replace(".png", "_precision.png"), lines, "BUSCO Precision", "Distance from Inachis Io", "Precision")
+    
+    lines = []
+    for name in bscores:
+        x = [tdist[s] for s in staxons]
+        y = [2/((1/bscores[name][s][0]) + (1/(1-bscores[name][s][1]))) for s in staxons]
+        label, color, linestyle, marker = name, None, "", "o"
+        lines.append((x,y,label, color, linestyle, marker))
+    visutils.saveLineGraph(args.output.replace(".png", "_fscore.png"), lines, "BUSCO F-Score", "Distance from Inachis Io", "F-Sore")
+
     
     '''
     outputDir = args.output_folder

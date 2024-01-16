@@ -255,7 +255,7 @@ def plotLineGraph(ax, lines, title = "", xAxis = "", yAxis = ""):
     
     ax.set_facecolor((0.9,0.9,0.9))
     opacity = 0.8
-    defaultColorSet = getColorSet("red", len(lines))
+    defaultColorSet = getColorSet("teal", len(lines))
     
     for i in range(len(lines)):
         x, y, label, color, linestyle, marker = lines[i]
@@ -283,6 +283,10 @@ def getColorSet(color, num):
     elif color.lower() == "red":
         #return [(0.6+0.4*i/n, 0.5*i/n, 0.4*i/n) for i in range(num)]
         return [(0.6+0.4*i/n, 0.5*i/n, 0.25*i/n) for i in range(num)]
+    elif color.lower() == "teal":
+        #return [(0.6+0.4*i/n, 0.5*i/n, 0.4*i/n) for i in range(num)]
+        #return [(0.0, 0.3+0.3*i/n, 0.3+0.4*i/n) for i in range(num)]
+        return [(0.0, 0.3+0.45*i/n, 0.3+0.6*i/n) for i in range(num)]
     #elif color.lower() == "yellow":
         
     elif color.lower() == "green":
