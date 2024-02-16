@@ -1,0 +1,5 @@
+(Windows: python, Linux: python3)
+
+python3 "../juno.py" -s sequences -d output -r Inachis_io -t 6 --align_factor 0.03
+
+python3 "../juno.py" -c user.ini -d output -r Vanessa_atalanta

@@ -17,6 +17,7 @@ def buildMafFile(context):
     context.localAlignInfo.dir = context.localAlignInfo.dir or os.path.join(context.workingDir, "local_align")
     context.matrixInfo.dir = context.matrixInfo.dir or os.path.join(context.workingDir, "matrix")
     context.matchInfo.dir = context.matchInfo.dir or os.path.join(context.workingDir, "matches") 
+    context.matrixInfo.sketchDir = context.matrixInfo.sketchDir or os.path.join(context.workingDir, "kmers")
     context.mafInfo.dir = context.mafInfo.dir or os.path.join(context.dir, "maf")
     
     for rname in context.sequenceInfo.ref:
